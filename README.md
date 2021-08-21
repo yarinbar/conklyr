@@ -7,13 +7,13 @@
     <img src="imgs/2021-08-21_16-07.png" width="720" height="380">
   </a>
 
-  <h3 align="center">ConkLyr</h3>
+  <h1 align="center">ConkLyr</h1>
 
   <p align="center">
     An awesome Conky widget that prints the lyrics of the currently played song
     <br />
   </p>
-</p>
+
 
 
 
