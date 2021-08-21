@@ -9,6 +9,9 @@ import numpy as np
 import matplotlib.cm
 from matplotlib.colors import to_hex
 
+# src
+from src.formatter import Formatter
+
 # project specific
 import lyricsgenius
 import spotipy
@@ -23,27 +26,22 @@ def get_args_parser():
     parser.add_argument('--highlight',
                         nargs='*',
                         type=str,
-                        default=['Verse', 'Chorus', 'Instrument', 'Solo', 'Intro', 'Outro'])
+                        default=['Verse', 'Chorus', 'Instrument', 'Solo', 'Bridge', 'Intro', 'Outro'])
 
     parser.add_argument('--cm', '--color-map',
                         type=str,
                         default='Pastel2')
+
+    parser.add_argument('--rm',
+                        nargs='*',
+                        type=str,
+                        default=['Remaster', '-'])
     return parser
-
-
-def add_color(src, regex, color):
-    matches = set(re.findall(regex, src))
-    dst = src
-    for match in matches:
-        dst = dst.replace(match, '${color ' + color + '}' + match + '${color}')
-    return dst
 
 
 def main(args):
     # disable printing
     sys.stdout = open(os.devnull, 'w')
-
-    show_lines = args.l
 
     genius = lyricsgenius.Genius(os.environ['GENIUS_TOKEN'])
 
@@ -53,44 +51,34 @@ def main(args):
                                                    scope='user-read-playback-state, user-read-currently-playing',
                                                    ))
 
-    font = os.environ['CONKY_FONT']
-    # font_size = os.environ['CONKY_FONT_SIZE']
-
     try:
         curr_song = sp.currently_playing()
 
-        artist = curr_song['item']['artists'][0]['name']
         song = curr_song['item']['name']
 
+        for substr in args.rm:
+            song = song.replace(substr, '')
+        song = song.strip()
+
+        artist = curr_song['item']['artists'][0]['name']
+
         lyrics = genius.search_artist(artist, max_songs=1).song(song).lyrics.replace('EmbedShare URLCopyEmbedCopy', '')
+
+        song, artist, lyrics = Formatter.pad(song), Formatter.pad(artist), Formatter.pad(lyrics)
         playback = sp.current_playback()
 
-        prec_played = 1 - (playback['item']['duration_ms'] - playback['progress_ms']) / playback['item']['duration_ms']
+        percent_played = 1 - (playback['item']['duration_ms'] - playback['progress_ms']) / playback['item']['duration_ms']
 
-        lines = lyrics.split('\n')
-        num_lines = len(lines)
+        lyrics = Formatter.slice(text=lyrics, position=percent_played, show_ahead=20, show_behind=10)
+        lyrics = Formatter.color(text=lyrics, highlight=args.highlight, cm=args.cm)
 
-        first_line = max(0, int(prec_played * num_lines) - show_lines // 2)
-        last_line = min(first_line + show_lines, num_lines)
-
-        lyrics = '\n'.join(lines[first_line: last_line])
+        song, artist, lyrics = Formatter.set_font(song, font_size=13, bold=True), Formatter.set_font(artist), Formatter.set_font(lyrics)
 
         # enable printing
         sys.stdout = sys.__stdout__
 
-        cm = matplotlib.cm.get_cmap(args.cm)
-        lin_space = np.linspace(0, 1, len(args.highlight))
 
-        for highlight_target, color_value in zip(args.highlight, lin_space):
-            hex_color = str(to_hex(cm(color_value)))
-            lyrics = add_color(lyrics, f'.*\s*{highlight_target}.*\s*]', color=hex_color)
-
-        lyrics = '${font ' + font + ':size=' + str(args.fs) + '}' + lyrics + '${font}'
-
-        song_line = '${font ' + font + ':size=13}' + song + '${font}'
-        artist_line = '${font ' + font + ':size=' + str(args.fs) + '}' + artist + '${font}'
-
-        lyrics = f'{song_line}\n{artist_line}\n\n{lyrics}'
+        lyrics = f'{song}\n{artist}\n\n{lyrics}'
 
         print(lyrics)
 
