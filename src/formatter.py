@@ -1,18 +1,10 @@
 # normal
-import argparse
-import os
 import re
-import sys
 
 # usually are not defaultively installed
 import numpy as np
 import matplotlib.cm
 from matplotlib.colors import to_hex
-
-# project specific
-import lyricsgenius
-import spotipy
-from spotipy.oauth2 import SpotifyOAuth
 
 
 class Formatter:
