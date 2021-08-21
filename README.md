@@ -90,8 +90,13 @@ After installing `requirements.txt` you are basically done.
 assuming your shell is in the folder `conklyr`:
 
 ```shell
+export CLIENT_ID=YOUR_SPOTIFY_CLIENT_ID
+export CLIENT_SECRET=YOUR_SPOTIFY_CLIENT_SECRET
+export GENIUS_TOKEN=YOUR_GENIUS_TOKEN
 conky -c lyrics.conf
 ```
+
+note that if you dont want to export it each session, you can add it to your `.bashrc` or `.zshrc`.
 
 you can edit `lyrics.conf` arguments and also the arguments used by the 'lyrics.py' script to personalize the widget.
 
