@@ -62,3 +62,16 @@ class Formatter:
         lines = [line + ' ' * max(0, width - len(line)) for line in lines]
         return '\n'.join(lines)
 
+    @staticmethod
+    def rtl(text: str):
+        lines = text.split('\n')
+
+        punctuation = {'.', '!', '?', ',', ' ', '\n', '(', ')', '[', ']', '-'}
+
+        # Hebrew
+        # lines = [line[::-1] if all("\u0590" <= c <= "\u05EA" or c in punctuation for c in line) else line for line in lines]
+
+        return '\n'.join(lines)
+
+
+
